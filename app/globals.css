@@ -1,26 +1,129 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #fbf8f3;
+  --surface: #ffffff;
+  --surface-2: #f5f1ea;
+  --ink: #3d3a4b;
+  --muted: #8c87a0;
+  --line: #ece6ef;
+  --shadow: 0 1px 2px rgb(61 58 75 / 0.04), 0 8px 24px -12px rgb(61 58 75 / 0.12);
+
+  /* Pastel: fondo / fuerte / tinta */
+  --lavanda-bg: #ece6fb; --lavanda: #b8a9f0; --lavanda-ink: #574796;
+  --menta-bg: #dcf3e7;   --menta: #8fd8b4;   --menta-ink: #2e7454;
+  --melocoton-bg: #ffe6d8; --melocoton: #ffb48d; --melocoton-ink: #9a4e2a;
+  --cielo-bg: #def0fc;   --cielo: #98c9f0;   --cielo-ink: #2b6698;
+  --rosa-bg: #fce4ee;    --rosa: #f3a6c3;    --rosa-ink: #9c3961;
+  --limon-bg: #faf3cf;   --limon: #ecd76a;   --limon-ink: #7c6912;
+  --salvia-bg: #e5eedc;  --salvia: #b1cc9b;  --salvia-ink: #4b6838;
+
+  --tone-crit: var(--limon);
+  --tone-success: var(--menta);
+  --tone-partial: var(--melocoton);
+  --tone-fail: var(--rosa);
+  --tone-fumble: #e88a9f;
+  --tone-neutral: var(--lavanda);
+
+  color-scheme: light;
 }
+
+[data-theme="dark"] {
+  --bg: #1d1b24;
+  --surface: #27242f;
+  --surface-2: #2f2b38;
+  --ink: #ece8f4;
+  --muted: #9b95ae;
+  --line: #38344a;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.2), 0 10px 30px -14px rgb(0 0 0 / 0.6);
+
+  --lavanda-bg: #353048; --lavanda: #a594e6; --lavanda-ink: #d9d0fb;
+  --menta-bg: #283e37;   --menta: #74c49d;   --menta-ink: #bdf0d5;
+  --melocoton-bg: #45332c; --melocoton: #eea07a; --melocoton-ink: #ffd5bf;
+  --cielo-bg: #283646;   --cielo: #7fb4e0;   --cielo-ink: #c9e5fb;
+  --rosa-bg: #432e3a;    --rosa: #e48fb0;    --rosa-ink: #fcd0e1;
+  --limon-bg: #3e3a26;   --limon: #d9c45a;   --limon-ink: #f6eaa8;
+  --salvia-bg: #313b2b;  --salvia: #9bb986;  --salvia-ink: #d6e8c8;
+
+  color-scheme: dark;
+}
+
+html { --tint-bg: var(--lavanda-bg); --tint: var(--lavanda); --tint-ink: var(--lavanda-ink); }
+
+/* Cualquier elemento con data-tint expone --tint-* para sus hijos */
+[data-tint="lavanda"] { --tint-bg: var(--lavanda-bg); --tint: var(--lavanda); --tint-ink: var(--lavanda-ink); }
+[data-tint="menta"] { --tint-bg: var(--menta-bg); --tint: var(--menta); --tint-ink: var(--menta-ink); }
+[data-tint="melocoton"] { --tint-bg: var(--melocoton-bg); --tint: var(--melocoton); --tint-ink: var(--melocoton-ink); }
+[data-tint="cielo"] { --tint-bg: var(--cielo-bg); --tint: var(--cielo); --tint-ink: var(--cielo-ink); }
+[data-tint="rosa"] { --tint-bg: var(--rosa-bg); --tint: var(--rosa); --tint-ink: var(--rosa-ink); }
+[data-tint="limon"] { --tint-bg: var(--limon-bg); --tint: var(--limon); --tint-ink: var(--limon-ink); }
+[data-tint="salvia"] { --tint-bg: var(--salvia-bg); --tint: var(--salvia); --tint-ink: var(--salvia-ink); }
+
+[data-tone="crit"] { --tint-bg: var(--limon-bg); --tint: var(--limon); --tint-ink: var(--limon-ink); }
+[data-tone="success"] { --tint-bg: var(--menta-bg); --tint: var(--menta); --tint-ink: var(--menta-ink); }
+[data-tone="partial"] { --tint-bg: var(--melocoton-bg); --tint: var(--melocoton); --tint-ink: var(--melocoton-ink); }
+[data-tone="fail"] { --tint-bg: var(--rosa-bg); --tint: var(--rosa); --tint-ink: var(--rosa-ink); }
+[data-tone="fumble"] { --tint-bg: var(--rosa-bg); --tint: var(--tone-fumble); --tint-ink: var(--rosa-ink); }
+[data-tone="neutral"] { --tint-bg: var(--lavanda-bg); --tint: var(--lavanda); --tint-ink: var(--lavanda-ink); }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-tint-bg: var(--tint-bg);
+  --color-tint: var(--tint);
+  --color-tint-ink: var(--tint-ink);
+  --font-sans: var(--font-nunito), ui-rounded, system-ui, sans-serif;
+  --shadow-soft: var(--shadow);
+  --radius-4xl: 2rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--bg);
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  overscroll-behavior-y: none;
+}
+
+button {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+:focus-visible {
+  outline: 2px solid var(--lavanda);
+  outline-offset: 2px;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
 }

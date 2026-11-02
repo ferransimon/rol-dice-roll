@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dados
 
-## Getting Started
+PWA en Next.js para tirar dados de rol: d20 (D&D/Pathfinder), PbtA, GURPS, reservas de d6 (Shadowrun) y d10 (Vampiro), Cyberpunk RED, percentil (La Llamada de Cthulhu), Fate/Fudge y Genesys/Star Wars FFG.
 
-First, run the development server:
+- **Mesa**: bandeja rápida (toca dados, ajusta modificador/dificultad, escribe notación tipo `2d6+1`, `1d20kh1`, `3d6!`), tiradas guardadas (toque = tirar, mantener = editar) e historial.
+- **Juegos**: configuraciones por juego (dados de la bandeja, cómo se lee la tirada, tiradas favoritas). Se crean desde plantilla o en blanco, se duplican y se reordenan.
+- **Jugadores**: varios jugadores en el mismo dispositivo; se elige quién tira antes de tirar.
+- **Sala**: código de 5 letras + QR para que varios dispositivos vean las tiradas de todos en tiempo real.
+- Funciona sin conexión (salvo la sala) y se puede instalar como app.
+
+## Desarrollo
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+pnpm dev          # http://localhost:3000
+pnpm test         # tests del motor de dados (Vitest)
+pnpm build && pnpm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+El service worker solo se registra en producción (`pnpm build && pnpm start`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Salas multi-dispositivo (Supabase Realtime)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Las salas usan los canales *broadcast* y *presence* de Supabase Realtime. No hace falta crear tablas ni guardar nada en el servidor.
 
-## Learn More
+1. Crea un proyecto gratuito en <https://supabase.com>.
+2. En *Project Settings → API* copia la **Project URL** y la clave pública **anon**.
+3. Crea `.env.local` a partir de `.env.local.example`:
 
-To learn more about Next.js, take a look at the following resources:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+4. Reinicia el servidor. En **Sala** crea una sala y comparte el enlace o el QR.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Para probar desde el móvil en la misma red: `pnpm dev -H 0.0.0.0` y abre `http://<IP-del-ordenador>:3000`. Para instalar la PWA en el móvil necesitas HTTPS (p. ej. desplegar en Vercel con las mismas variables de entorno).
 
-## Deploy on Vercel
+Al entrar en una sala, el dispositivo pide a los demás las últimas 50 tiradas, así que quien llega tarde ve el historial reciente.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Estructura
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `lib/dice/`: motor de dados puro (tirar, evaluar, notación, estadísticas, plantillas) con tests.
+- `lib/store/`: estado con zustand persistido en `localStorage`.
+- `lib/room/`: conexión a la sala (Supabase Realtime).
+- `components/`: UI (Tailwind v4 + Motion).
+- `public/sw.js`: service worker escrito a mano (shell offline + caché de estáticos).
