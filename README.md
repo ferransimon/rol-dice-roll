@@ -1,6 +1,6 @@
 # Dados
 
-PWA en Next.js para tirar dados de rol: d20 (D&D/Pathfinder), PbtA, GURPS, reservas de d6 (Shadowrun) y d10 (Vampiro), Cyberpunk RED, percentil (La Llamada de Cthulhu), Fate/Fudge y Genesys/Star Wars FFG.
+PWA en Next.js para tirar dados de rol: d20 (D&D/Pathfinder), PbtA, GURPS, reservas de d6 (Shadowrun) y d10 (Vampiro), Cyberpunk RED, percentil (La Llamada de Cthulhu y Troubleshooters, con puntos de historia y tiradas girables), Fate/Fudge y Genesys/Star Wars FFG.
 
 - **Mesa**: bandeja rápida (toca dados, ajusta modificador/dificultad, escribe notación tipo `2d6+1`, `1d20kh1`, `3d6!`), tiradas guardadas (toque = tirar, mantener = editar) e historial.
 - **Juegos**: configuraciones por juego (dados de la bandeja, cómo se lee la tirada, tiradas favoritas). Se crean desde plantilla o en blanco, se duplican y se reordenan.

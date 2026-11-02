@@ -18,7 +18,7 @@ export function PlayerAvatar({ name, tint, size = 28 }: { name: string; tint: st
   );
 }
 
-export function PlayerSwitcher() {
+export function PlayerSwitcher({ storyPoints }: { storyPoints?: Record<string, number> }) {
   const players = useApp((s) => s.players);
   const activeId = useApp((s) => s.activePlayerId);
   const setActive = useApp((s) => s.setActivePlayer);
@@ -52,6 +52,16 @@ export function PlayerSwitcher() {
                 <PlayerAvatar name={p.name} tint={p.tint} />
               </span>
               <span className="relative">{p.name}</span>
+              {storyPoints && (
+                <motion.span
+                  key={storyPoints[p.id] ?? 0}
+                  initial={{ scale: 1.5 }}
+                  animate={{ scale: 1 }}
+                  className="relative -mr-1.5 rounded-full bg-surface/70 px-1.5 text-[11px] font-black tabular-nums"
+                >
+                  ★{storyPoints[p.id] ?? 0}
+                </motion.span>
+              )}
             </motion.button>
           );
         })}

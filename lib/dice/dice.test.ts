@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { d, dF, dPct, g } from "./dice";
 import { formatNotation, parseNotation } from "./notation";
 import { setRng } from "./random";
-import { evaluate, roll, rollDice } from "./roll";
+import { evaluate, flipPercent, flipResult, isDouble, roll, rollDice } from "./roll";
 import type { DieResult, RollSpec } from "./types";
 
 /** RNG que devuelve una secuencia fija (valores 1..n). */
@@ -133,6 +133,72 @@ describe("percentil (Cthulhu)", () => {
     expect(roll(spec(50, 1)).total).toBe(15);
     seq(6, 8, 2);
     expect(roll(spec(50, -1)).total).toBe(75);
+  });
+});
+
+describe("percentil (Troubleshooters)", () => {
+  const spec = (skill: number, modifier = 0): RollSpec => ({
+    groups: [{ die: dPct, count: 1 }],
+    modifier,
+    mode: { kind: "percentile", skill, bonus: 0, style: "troubleshooters" },
+  });
+
+  it("éxito y fallo sin niveles ni pifias", () => {
+    seq(3, 1); // 02
+    expect(roll(spec(50)).headline).toBe("Éxito");
+    seq(8, 10); // 97
+    const r = roll(spec(40));
+    expect(r.headline).toBe("Fallo");
+    expect(r.tone).toBe("fail");
+  });
+
+  it("dobles con éxito dan un punto de historia", () => {
+    seq(4, 4); // 33
+    const r = roll(spec(50));
+    expect(r.storyPoint).toBe(1);
+    expect(r.tone).toBe("crit");
+    seq(8, 8); // 77
+    expect(roll(spec(50)).storyPoint).toBeUndefined();
+    seq(1, 1); // 00 = 100
+    const z = roll(spec(99));
+    expect(z.total).toBe(100);
+    expect(z.storyPoint).toBeUndefined();
+  });
+
+  it("ignora la bonificación", () => {
+    seq(6, 8, 2);
+    const r = roll({ ...spec(50), mode: { kind: "percentile", skill: 50, bonus: 1, style: "troubleshooters" } });
+    expect(r.total).toBe(75);
+    expect(r.dice[0].tens).toHaveLength(1);
+  });
+
+  it("gira las decenas y las unidades", () => {
+    expect(flipPercent(73)).toBe(37);
+    expect(flipPercent(10)).toBe(1);
+    expect(flipPercent(1)).toBe(10);
+    expect(flipPercent(100)).toBe(100);
+    expect([11, 55, 99, 100].every(isDouble)).toBe(true);
+    expect([10, 1, 12].some(isDouble)).toBe(false);
+  });
+
+  it("girar convierte un fallo en éxito", () => {
+    const s = spec(40);
+    seq(4, 8); // 73
+    const r = roll(s);
+    expect(r.tone).toBe("fail");
+    expect(r.flip).toEqual({ value: 37, success: true });
+    const f = flipResult(s, r);
+    expect(f.total).toBe(37);
+    expect(f.tone).toBe("success");
+    expect(f.flipped).toBe(true);
+    expect(f.flip).toBeUndefined();
+    expect(f.detail).toContain("73 → 37");
+    expect(flipResult(s, f)).toBe(f);
+  });
+
+  it("los dobles no se pueden girar", () => {
+    seq(5, 5); // 44
+    expect(roll(spec(30)).flip).toBeUndefined();
   });
 });
 

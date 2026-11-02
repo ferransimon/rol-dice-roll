@@ -30,6 +30,9 @@ export interface Band {
   tone: Tone;
 }
 
+/** Cthulhu: niveles de éxito y pifia. Troubleshooters: éxito/fallo, dobles y girar la tirada. */
+export type PercentStyle = "cthulhu" | "troubleshooters";
+
 export type EvalMode =
   /** Suma de todo + modificador. `crit` marca 20 natural / 1 natural en un d20. */
   | { kind: "sum"; crit?: boolean }
@@ -40,7 +43,7 @@ export type EvalMode =
   /** Reserva: cuenta dados con valor >= target. */
   | { kind: "pool"; target: number; onesCancel?: boolean; glitch?: boolean }
   /** d100 contra habilidad (Cthulhu). bonus > 0 dados de bonificación, < 0 penalización. */
-  | { kind: "percentile"; skill: number; bonus: number }
+  | { kind: "percentile"; skill: number; bonus: number; style?: PercentStyle }
   /** Fate/Fudge: suma de dF + modificador, con la escalera de adjetivos. */
   | { kind: "fudge" }
   /** Genesys / Star Wars FFG: símbolos que se cancelan. */
@@ -80,6 +83,8 @@ export interface DieResult {
   /** Para percentil: dados de decenas tirados (el usado es `value`). */
   tens?: number[];
   units?: number;
+  /** Percentil girado (decenas y unidades intercambiadas). */
+  flipped?: boolean;
 }
 
 export type GenesysTally = Record<GenesysSymbol, number>;
@@ -93,4 +98,10 @@ export interface RollResult {
   tone: Tone;
   notation: string;
   genesys?: GenesysTally;
+  /** Puntos de historia ganados con la tirada (Troubleshooters: dobles con éxito). */
+  storyPoint?: number;
+  /** Troubleshooters: valor al girar la tirada y si sería éxito. */
+  flip?: { value: number; success: boolean };
+  /** La tirada se ha girado gastando un punto de historia. */
+  flipped?: boolean;
 }

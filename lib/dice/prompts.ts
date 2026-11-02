@@ -8,7 +8,7 @@ export function availablePrompts(spec: RollSpec): PromptKey[] {
   const k = spec.mode.kind;
   if (k === "rollUnder" || k === "pool" || k === "percentile") keys.push("target");
   if (k !== "genesys") keys.push("modifier");
-  if (k === "percentile") keys.push("bonus");
+  if (spec.mode.kind === "percentile" && spec.mode.style !== "troubleshooters") keys.push("bonus");
   return keys;
 }
 

@@ -12,7 +12,7 @@ import { useHydrated } from "@/lib/store/ui";
 import { ModeEditor } from "@/components/builder/ModeEditor";
 import { RollBuilder } from "@/components/builder/RollBuilder";
 import { DieIcon, trayText } from "@/components/dice/DieIcon";
-import { Field, inputClass } from "@/components/ui/controls";
+import { Field, inputClass, Toggle } from "@/components/ui/controls";
 
 function RollRow({ roll, onEdit }: { roll: SavedRoll; onEdit: () => void }) {
   const controls = useDragControls();
@@ -96,6 +96,16 @@ function Editor({ game }: { game: Game }) {
             ))}
           </div>
         </div>
+        <Toggle
+          checked={!!game.storyPoints}
+          onChange={(storyPoints) => patch({ storyPoints })}
+          label={
+            <span>
+              Puntos de historia
+              <span className="block text-xs font-normal text-muted">Contador por jugador en la mesa; permite girar tiradas de percentil girables.</span>
+            </span>
+          }
+        />
       </section>
 
       <section className="space-y-3 rounded-4xl bg-surface p-4 shadow-soft">

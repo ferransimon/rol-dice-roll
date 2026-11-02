@@ -5,7 +5,7 @@ import { useCallback, useState } from "react";
 import { formatNotation } from "@/lib/dice/notation";
 import type { SavedRoll } from "@/lib/dice/presets";
 import type { RollSpec } from "@/lib/dice/types";
-import { useRoller } from "@/lib/hooks/useRoller";
+import { useFlip, useRoller } from "@/lib/hooks/useRoller";
 import { newId, useActiveGame, useApp, type HistoryEntry } from "@/lib/store/app";
 import { useHydrated, useUi } from "@/lib/store/ui";
 import { RollBuilder } from "@/components/builder/RollBuilder";
@@ -16,6 +16,7 @@ import { Tray } from "@/components/dice/Tray";
 import { GamePicker } from "@/components/GamePicker";
 import { HistoryFeed } from "@/components/history/HistoryFeed";
 import { PlayerSwitcher } from "@/components/players/PlayerSwitcher";
+import { StoryPoints, useGameStoryPoints } from "@/components/players/StoryPoints";
 
 export function Mesa() {
   const hydrated = useHydrated();
@@ -41,6 +42,8 @@ function MesaInner() {
   const lastId = useUi((s) => s.lastEntryId);
   const nonce = useUi((s) => s.rollNonce);
   const rollNow = useRoller();
+  const flip = useFlip();
+  const storyPoints = useGameStoryPoints(game.id);
 
   const [prompting, setPrompting] = useState<SavedRoll | null>(null);
   const [editing, setEditing] = useState<{ roll: SavedRoll; isNew: boolean } | null>(null);
@@ -59,7 +62,8 @@ function MesaInner() {
   return (
     <div data-tint={game.tint} className="space-y-5 px-4 pt-4" style={{ paddingBottom: trayH + 80 }}>
       <GamePicker />
-      <PlayerSwitcher />
+      <PlayerSwitcher storyPoints={game.storyPoints ? storyPoints : undefined} />
+      {game.storyPoints && <StoryPoints game={game} />}
 
       <AnimatePresence mode="popLayout">
         {last ? (
@@ -70,6 +74,8 @@ function MesaInner() {
             title={last.playerName}
             playerTint={last.playerTint}
             subtitle={last.rollName ?? last.gameName}
+            onFlip={!last.remote && last.gameId === game.id && game.storyPoints ? () => flip(last.id) : undefined}
+            storyPoints={storyPoints[last.playerId] ?? 0}
           />
         ) : (
           <motion.div

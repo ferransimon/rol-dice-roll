@@ -10,16 +10,27 @@ export function DiceRow({ dice, animate = true, size = 38 }: { dice: DieResult[]
     <div className="flex flex-wrap gap-1.5">
       {dice.map((r, i) => (
         <motion.div
-          key={i}
+          key={r.flipped ? `${i}-girado` : i}
           className="relative"
-          initial={animate ? { scale: 0.2, rotate: -180 + ((i * 67) % 120), y: -24, opacity: 0 } : false}
-          animate={{ scale: 1, rotate: 0, y: 0, opacity: 1 }}
+          initial={
+            r.flipped && animate
+              ? { rotateY: 180, scale: 0.8 }
+              : animate
+                ? { scale: 0.2, rotate: -180 + ((i * 67) % 120), y: -24, opacity: 0 }
+                : false
+          }
+          animate={{ scale: 1, rotate: 0, rotateY: 0, y: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 380, damping: 18, delay: animate ? Math.min(i * 0.035, 0.6) : 0 }}
           title={r.tens ? `Decenas ${r.tens.map((t) => t * 10).join(", ")} · unidades ${r.units}` : undefined}
         >
           <DieIcon die={r.die} text={faceText(r.die, r.value)} size={size} dim={r.dropped || (r.hit === false && !r.one)} />
           {r.hit && <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-surface" style={{ background: "var(--menta)" }} />}
           {r.one && <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-surface" style={{ background: "var(--rosa)" }} />}
+          {r.flipped && (
+            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full bg-surface px-1 text-[9px] leading-tight font-black text-muted shadow-soft">
+              ↻
+            </span>
+          )}
           {r.exploded && (
             <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full bg-surface px-1 text-[9px] leading-tight font-black text-muted shadow-soft">
               ✶
@@ -54,12 +65,18 @@ export function ResultCard({
   subtitle,
   nonce,
   playerTint,
+  onFlip,
+  storyPoints,
 }: {
   result: RollResult;
   title?: string;
   subtitle?: string;
   nonce: number | string;
   playerTint?: string;
+  /** Troubleshooters: girar la tirada gastando un punto de historia. */
+  onFlip?: () => void;
+  /** Puntos de historia disponibles del jugador que tiró. */
+  storyPoints?: number;
 }) {
   const big = result.total !== null;
   return (
@@ -111,9 +128,45 @@ export function ResultCard({
         <DiceRow dice={result.dice} />
       </div>
 
+      {result.flip && onFlip && <FlipButton flip={result.flip} success={result.tone !== "fail"} points={storyPoints ?? 0} onFlip={onFlip} />}
+
       <AnimatePresence>
         {result.tone === "crit" && <Sparkles key="sp" />}
       </AnimatePresence>
+    </motion.div>
+  );
+}
+
+function FlipButton({
+  flip,
+  success,
+  points,
+  onFlip,
+}: {
+  flip: NonNullable<RollResult["flip"]>;
+  success: boolean;
+  points: number;
+  onFlip: () => void;
+}) {
+  const rescues = !success && flip.success;
+  const disabled = points < 1;
+  const shown = String(flip.value % 100).padStart(2, "0");
+  return (
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="mt-3 flex items-center gap-2">
+      <motion.button
+        type="button"
+        whileTap={{ scale: 0.94 }}
+        disabled={disabled}
+        onClick={onFlip}
+        className={`rounded-full px-3.5 py-2 text-sm font-extrabold transition-opacity disabled:opacity-40 ${
+          rescues ? "bg-surface text-tint-ink shadow-soft ring-2 ring-[var(--tint)]" : "bg-surface/60"
+        }`}
+      >
+        ↻ Girar → {shown} · −1 PH
+      </motion.button>
+      <span className="text-xs font-semibold opacity-70">
+        {disabled ? "Sin puntos de historia" : rescues ? "¡Sería un éxito!" : flip.success ? "También éxito" : "Seguiría fallando"}
+      </span>
     </motion.div>
   );
 }

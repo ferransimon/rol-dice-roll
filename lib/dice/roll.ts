@@ -23,7 +23,7 @@ function rollPercentile(bonus: number): { value: number; tens: number[]; units: 
 
 export function rollDice(spec: RollSpec): DieResult[] {
   const out: DieResult[] = [];
-  const bonus = spec.mode.kind === "percentile" ? spec.mode.bonus : 0;
+  const bonus = spec.mode.kind === "percentile" && spec.mode.style !== "troubleshooters" ? spec.mode.bonus : 0;
 
   spec.groups.forEach((group, gi) => {
     const { die } = group;
@@ -208,6 +208,18 @@ export function evaluate(spec: RollSpec, dice: DieResult[]): RollResult {
       const skill = mode.skill + mod;
       if (!pct) return result(null, "Añade un d%", "neutral");
       const v = pct.value;
+      if (mode.style === "troubleshooters") {
+        const ok = v <= skill;
+        const parts = [`Habilidad ${skill}`];
+        const flipped = flipPercent(v);
+        const flip = flipped !== v ? { value: flipped, success: flipped <= skill } : undefined;
+        if (isDouble(v) && ok) {
+          parts.push("+1 punto de historia");
+          return result(v, "¡Dobles! Éxito", "crit", parts.join(" · "), { flip, storyPoint: 1 });
+        }
+        if (isDouble(v)) parts.push("dobles");
+        return result(v, ok ? "Éxito" : "Fallo", ok ? "success" : "fail", parts.join(" · "), { flip });
+      }
       const extreme = Math.floor(skill / 5);
       const hard = Math.floor(skill / 2);
       const detail = `Habilidad ${skill} · difícil ${hard} · extremo ${extreme}`;
@@ -256,6 +268,40 @@ export function evaluate(spec: RollSpec, dice: DieResult[]): RollResult {
       return result(null, headline, tone, parts.join(" · "), { genesys: t });
     }
   }
+}
+
+/** Dobles en un d100: 11, 22… 99 y 00 (= 100). */
+export function isDouble(v: number): boolean {
+  return v === 100 || (v % 11 === 0 && v > 0 && v < 100);
+}
+
+/** Intercambia decenas y unidades: 73 → 37, 10 → 01 (= 1), 00 → 00. */
+export function flipPercent(v: number): number {
+  const n = v % 100;
+  const flipped = (n % 10) * 10 + Math.floor(n / 10);
+  return flipped || 100;
+}
+
+/** Troubleshooters: gira la tirada de percentil (gastando un punto de historia). */
+export function flipResult(spec: RollSpec, prev: RollResult): RollResult {
+  const idx = prev.dice.findIndex((r) => !r.dropped && (r.die.type === "percentile" || (r.die.type === "standard" && r.die.sides === 100)));
+  if (idx < 0 || prev.flipped) return prev;
+  const from = prev.dice[idx].value;
+  const to = flipPercent(from);
+  const dice = prev.dice.map((r, i) =>
+    i === idx ? { ...r, value: to, flipped: true, tens: [Math.floor((to % 100) / 10)], units: to % 10 } : { ...r },
+  );
+  const next = evaluate(spec, dice);
+  const pad = (n: number) => String(n % 100).padStart(2, "0");
+  return {
+    ...next,
+    headline: `${next.headline.replace("¡Dobles! ", "")} (girada)`,
+    tone: next.tone === "crit" ? "success" : next.tone,
+    detail: [`Girada: ${pad(from)} → ${pad(to)}`, next.detail?.replace(" · +1 punto de historia", "")].filter(Boolean).join(" · "),
+    storyPoint: undefined,
+    flip: undefined,
+    flipped: true,
+  };
 }
 
 export function roll(spec: RollSpec): RollResult {

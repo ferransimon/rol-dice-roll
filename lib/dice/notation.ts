@@ -33,6 +33,7 @@ export function describeMode(mode: EvalMode, modifier = 0): string {
     case "pool":
       return `Éxitos ≥ ${mode.target}`;
     case "percentile":
+      if (mode.style === "troubleshooters") return `≤ ${mode.skill + modifier}% · girable`;
       return `≤ ${mode.skill + modifier}%${mode.bonus > 0 ? ` · +${mode.bonus} bonif.` : mode.bonus < 0 ? ` · ${-mode.bonus} penaliz.` : ""}`;
     case "fudge":
       return "Escalera Fate";

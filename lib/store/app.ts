@@ -19,6 +19,7 @@ export interface HistoryEntry {
   playerId: string;
   playerName: string;
   playerTint: Tint;
+  gameId?: string;
   gameName: string;
   rollName?: string;
   spec: RollSpec;
@@ -46,6 +47,8 @@ interface State {
   history: HistoryEntry[];
   settings: Settings;
   room: string | null;
+  /** Puntos de historia: juego → jugador → puntos. */
+  storyPoints: Record<string, Record<string, number>>;
 }
 
 interface Actions {
@@ -65,6 +68,9 @@ interface Actions {
   removeRoll: (gameId: string, rollId: string) => void;
 
   addEntry: (entry: HistoryEntry) => void;
+  updateEntry: (id: string, patch: Partial<HistoryEntry>) => void;
+  adjustStoryPoints: (gameId: string, playerId: string, delta: number) => void;
+  setStoryPoints: (gameId: string, playerId: string, value: number) => void;
   mergeEntries: (entries: HistoryEntry[]) => void;
   clearHistory: () => void;
 
@@ -96,6 +102,7 @@ function initialState(): State {
     history: [],
     settings: { theme: "auto", sound: true, haptics: true, shake: false },
     room: null,
+    storyPoints: {},
   };
 }
 
@@ -163,6 +170,13 @@ export const useApp = create<State & Actions>()(
         set((s) => ({ games: s.games.map((g) => (g.id === gameId ? { ...g, rolls: g.rolls.filter((r) => r.id !== rollId) } : g)) })),
 
       addEntry: (entry) => set((s) => ({ history: sortHistory([entry, ...s.history.filter((h) => h.id !== entry.id)]) })),
+      updateEntry: (id, patch) => set((s) => ({ history: s.history.map((h) => (h.id === id ? { ...h, ...patch } : h)) })),
+      adjustStoryPoints: (gameId, playerId, delta) =>
+        get().setStoryPoints(gameId, playerId, (get().storyPoints[gameId]?.[playerId] ?? 0) + delta),
+      setStoryPoints: (gameId, playerId, value) =>
+        set((s) => ({
+          storyPoints: { ...s.storyPoints, [gameId]: { ...s.storyPoints[gameId], [playerId]: Math.max(0, Math.min(99, value)) } },
+        })),
       mergeEntries: (entries) =>
         set((s) => {
           const ids = new Set(s.history.map((h) => h.id));
@@ -193,7 +207,15 @@ export const useApp = create<State & Actions>()(
     }),
     {
       name: "dados-app",
-      version: 1,
+      version: 2,
+      migrate: (persisted, version) => {
+        const s = persisted as Partial<State>;
+        if (version < 2 && s.games && !s.games.some((g) => g.name === "Troubleshooters")) {
+          const preset = PRESETS.find((p) => p.id === "troubleshooters");
+          if (preset) s.games = [...s.games, instantiate(preset)];
+        }
+        return { ...s, storyPoints: s.storyPoints ?? {} } as State & Actions;
+      },
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
       partialize: (s) => ({
@@ -205,6 +227,7 @@ export const useApp = create<State & Actions>()(
         history: s.history,
         settings: s.settings,
         room: s.room,
+        storyPoints: s.storyPoints,
       }),
     },
   ),

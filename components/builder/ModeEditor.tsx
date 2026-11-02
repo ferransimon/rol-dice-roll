@@ -2,14 +2,14 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import type { Band, EvalKind, EvalMode, Tone } from "@/lib/dice/types";
-import { Stepper, Toggle, inputClass } from "@/components/ui/controls";
+import { Segmented, Stepper, Toggle, inputClass } from "@/components/ui/controls";
 
 export const MODE_LABELS: Record<EvalKind, { name: string; hint: string }> = {
   sum: { name: "Suma", hint: "Suma los dados y el modificador" },
   threshold: { name: "Bandas", hint: "El total cae en un tramo (p.ej. 10+, 7–9, 6-)" },
   rollUnder: { name: "Bajo objetivo", hint: "Igual o por debajo de la habilidad" },
   pool: { name: "Reserva", hint: "Cuenta los dados que igualan o superan la dificultad" },
-  percentile: { name: "Percentil", hint: "d100 por debajo de la habilidad, con niveles de éxito" },
+  percentile: { name: "Percentil", hint: "d100 por debajo de la habilidad (Cthulhu con niveles de éxito, o Troubleshooters girable)" },
   fudge: { name: "Fate", hint: "Dados ±, escalera de adjetivos" },
   genesys: { name: "Narrativo", hint: "Símbolos de éxito/fracaso y ventaja/amenaza que se cancelan" },
 };
@@ -137,12 +137,28 @@ export function ModeEditor({ mode, onChange }: { mode: EvalMode; onChange: (m: E
         )}
         {mode.kind === "percentile" && (
           <>
+            <Segmented
+              layoutId="pct-style"
+              value={mode.style ?? "cthulhu"}
+              onChange={(style) => onChange({ ...mode, style, bonus: style === "troubleshooters" ? 0 : mode.bonus })}
+              options={[
+                { value: "cthulhu", label: "Cthulhu" },
+                { value: "troubleshooters", label: "Troubleshooters" },
+              ]}
+            />
+            <p className="text-xs text-muted">
+              {mode.style === "troubleshooters"
+                ? "Éxito o fallo. Dobles con éxito dan un punto de historia, y se puede girar la tirada (73 → 37) gastando uno."
+                : "Crítico (01), extremo (⅕), difícil (½), normal, fallo y pifia."}
+            </p>
             <Row label="Habilidad">
               <Stepper value={mode.skill} min={1} max={100} onChange={(skill) => onChange({ ...mode, skill })} suffix="%" />
             </Row>
-            <Row label="Bonif. / Penaliz.">
-              <Stepper value={mode.bonus} min={-2} max={2} signed onChange={(bonus) => onChange({ ...mode, bonus })} />
-            </Row>
+            {mode.style !== "troubleshooters" && (
+              <Row label="Bonif. / Penaliz.">
+                <Stepper value={mode.bonus} min={-2} max={2} signed onChange={(bonus) => onChange({ ...mode, bonus })} />
+              </Row>
+            )}
           </>
         )}
       </motion.div>

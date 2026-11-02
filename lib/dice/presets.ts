@@ -31,6 +31,8 @@ export interface Game {
   /** Cómo se evalúan las tiradas hechas desde la bandeja rápida. */
   trayMode: EvalMode;
   rolls: SavedRoll[];
+  /** Lleva la cuenta de puntos de historia de cada jugador. */
+  storyPoints?: boolean;
 }
 
 const PBTA_BANDS: EvalMode = {
@@ -131,6 +133,20 @@ export const PRESETS: Game[] = [
       r("skill", "Tirada de habilidad", { groups: [{ die: dPct, count: 1 }], modifier: 0, mode: { kind: "percentile", skill: 50, bonus: 0 } }, ["target", "bonus"]),
       r("san", "Cordura", { groups: [{ die: dPct, count: 1 }], modifier: 0, mode: { kind: "percentile", skill: 60, bonus: 0 } }, ["target"]),
       r("sanloss", "Pérdida de cordura 1d6", { groups: [{ die: d(6), count: 1 }], modifier: 0, mode: sum() }),
+    ],
+  },
+  {
+    id: "troubleshooters",
+    name: "Troubleshooters",
+    tint: "melocoton",
+    description: "d100 bajo habilidad · gira la tirada con puntos de historia",
+    storyPoints: true,
+    quickDice: [dPct, d(6)],
+    trayMode: { kind: "percentile", skill: 50, bonus: 0, style: "troubleshooters" },
+    rolls: [
+      r("skill", "Tirada de habilidad", { groups: [{ die: dPct, count: 1 }], modifier: 0, mode: { kind: "percentile", skill: 50, bonus: 0, style: "troubleshooters" } }, ["target"]),
+      r("attack", "Dados de ataque", { groups: [{ die: d(6), count: 2, explode: true }], modifier: 0, mode: sum() }, ["count"]),
+      r("dmg", "Daño 1d6", { groups: [{ die: d(6), count: 1, explode: true }], modifier: 0, mode: sum() }, ["modifier"]),
     ],
   },
   {
